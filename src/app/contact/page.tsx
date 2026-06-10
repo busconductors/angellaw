@@ -6,6 +6,8 @@ import ScrollReveal from '@/components/ScrollReveal';
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
     fullName: '',
     email: '',
@@ -22,9 +24,38 @@ export default function Contact() {
     setForm({ ...form, [target.name]: value });
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSending(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          phone: form.phone,
+          company: form.company,
+          legalMatter: form.legalMatter,
+          contactMethod: form.contactMethod,
+          consent: form.consent,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong.');
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -162,6 +193,12 @@ export default function Contact() {
                       All consultations are confidential. Fields marked <span className="text-gold">*</span> are required.
                     </p>
 
+                    {error && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-sm text-red-700">{error}</p>
+                      </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
@@ -254,8 +291,8 @@ export default function Contact() {
                         </span>
                       </label>
 
-                      <button type="submit" className="btn-primary w-full text-sm py-4">
-                        Submit Request
+                      <button type="submit" disabled={sending} className="btn-primary w-full text-sm py-4 disabled:opacity-60 disabled:cursor-not-allowed">
+                        {sending ? 'Sending...' : 'Submit Request'}
                       </button>
                     </form>
                   </>

@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "angellaw-site"
-  }
+  },
+  "targets": {
+    "covington-burling-llp": {
+      "hosting": {
+        "angellaw": [
+          "angellaw-site"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
